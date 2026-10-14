@@ -3,7 +3,6 @@ const healthRoutes = require("./routes/healthRoutes");
 const notFound = require("./middleware/notFound");
 const errorHandler = require("./middleware/errorHandler");
 const authRoutes = require("./routes/authRoutes");
-const sessionMiddleware = require("./middleware/session");
 const transactionRoutes = require("./routes/transactionRoutes");
 const validateOrigin = require("./middleware/validateOrigin");
 const dashboardRoutes = require("./routes/dashboardRoutes");
@@ -24,7 +23,6 @@ app.use(
 );
 
 app.use(express.json());
-app.use(sessionMiddleware);
 
 app.use("/api/health", healthRoutes);
 app.use("/api/auth", validateOrigin, authRoutes);

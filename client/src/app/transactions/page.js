@@ -23,6 +23,13 @@ export default function TransactionsPage() {
 
   useEffect(() => {
     async function loadTransactions() {
+      const token = localStorage.getItem("spendwiseToken");
+
+      if (!token) {
+        window.location.href = "/";
+        return;
+      }
+
       setLoading(true);
       setError("");
 
@@ -40,7 +47,11 @@ export default function TransactionsPage() {
 
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/transactions?${params}`,
-          { credentials: "include" },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
         );
 
         const data = await response.json();
@@ -115,6 +126,12 @@ export default function TransactionsPage() {
   }
 
   async function saveEdit(id) {
+    const token = localStorage.getItem("spendwiseToken");
+
+    if (!token) {
+      window.location.href = "/";
+      return;
+    }
     setSavingId(id);
     setError("");
     setMessage("");
@@ -124,8 +141,11 @@ export default function TransactionsPage() {
         `${process.env.NEXT_PUBLIC_API_URL}/api/transactions/${id}`,
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+
           body: JSON.stringify({
             ...editForm,
             amount: Number(editForm.amount),
@@ -154,6 +174,12 @@ export default function TransactionsPage() {
   }
 
   async function deleteTransaction(id) {
+    const token = localStorage.getItem("spendwiseToken");
+
+    if (!token) {
+      window.location.href = "/";
+      return;
+    }
     const confirmed = window.confirm(
       "Are you sure you want to delete this transaction?",
     );
@@ -169,7 +195,9 @@ export default function TransactionsPage() {
         `${process.env.NEXT_PUBLIC_API_URL}/api/transactions/${id}`,
         {
           method: "DELETE",
-          credentials: "include",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
       );
 
@@ -198,6 +226,12 @@ export default function TransactionsPage() {
   }
 
   async function refreshTransactions() {
+    const token = localStorage.getItem("spendwiseToken");
+
+    if (!token) {
+      window.location.href = "/";
+      return;
+    }
     const params = new URLSearchParams({
       page: String(page),
       limit: String(limit),
@@ -211,7 +245,11 @@ export default function TransactionsPage() {
 
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/api/transactions?${params}`,
-      { credentials: "include" },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
     );
 
     const data = await response.json();
@@ -368,7 +406,10 @@ export default function TransactionsPage() {
                             <select
                               id="category"
                               name="category"
-                              defaultValue=""
+                              value={editForm.category || ""}
+                              onChange={(event) =>
+                                updateEditField("category", event.target.value)
+                              }
                               required
                             >
                               <option value="" disabled>

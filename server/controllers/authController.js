@@ -1,3 +1,4 @@
+const { generateToken } = require("../utils/jwt");
 const { registerUser, loginUser } = require("../services/authService");
 
 async function register(req, res, next) {
@@ -31,25 +32,13 @@ async function login(req, res, next) {
   try {
     const user = await loginUser(req.body);
 
-    // Prevent session fixation by issuing a new session ID.
-    req.session.regenerate((error) => {
-      if (error) {
-        return next(error);
-      }
+    const token = generateToken(user);
 
-      req.session.userId = user.id;
-
-      req.session.save((saveError) => {
-        if (saveError) {
-          return next(saveError);
-        }
-
-        return res.status(200).json({
-          success: true,
-          message: "Login successful.",
-          user,
-        });
-      });
+    return res.status(200).json({
+      success: true,
+      message: "Login successful.",
+      token,
+      user,
     });
   } catch (error) {
     next(error);
@@ -63,23 +52,10 @@ function me(req, res) {
   });
 }
 
-function logout(req, res, next) {
-  req.session.destroy((error) => {
-    if (error) {
-      return next(error);
-    }
-
-    res.clearCookie("spendwise.sid", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: "Logout successful.",
-    });
+function logout(req, res) {
+  return res.status(200).json({
+    success: true,
+    message: "Logout successful.",
   });
 }
 

@@ -10,10 +10,19 @@ export default function DashboardPage() {
   useEffect(() => {
     async function fetchSummary() {
       try {
+        const token = localStorage.getItem("spendwiseToken");
+
+        if (!token) {
+          window.location.href = "/";
+          return;
+        }
+
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/dashboard/summary`,
           {
-            credentials: "include",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           },
         );
 

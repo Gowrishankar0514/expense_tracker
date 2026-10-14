@@ -10,11 +10,21 @@ export default function ProfilePage() {
 
   useEffect(() => {
     async function loadProfile() {
+      const token = localStorage.getItem("spendwiseToken");
+
+      if (!token) {
+        window.location.href = "/";
+        setLoading(false);
+        return;
+      }
+
       try {
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`,
           {
-            credentials: "include",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           },
         );
 

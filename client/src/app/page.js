@@ -44,6 +44,12 @@ export default function Home() {
         return;
       }
 
+      if (!data.token) {
+        setError("Login succeeded, but no JWT token was returned.");
+        return;
+      }
+
+      localStorage.setItem("spendwiseToken", data.token);
       window.location.href = "/dashboard";
     } catch (err) {
       setError("Cannot connect to the server. Please try again.");

@@ -18,22 +18,34 @@ export default function NewTransactionPage() {
   const [formValues, setFormValues] = useState({
     title: "",
     amount: "",
-    type: "expense",
+    type: "",
     category: "",
     transactionDate: getTodayDate(),
   });
 
   const [isRestored, setIsRestored] = useState(false);
 
+  useEffect(() => {
+    const token = localStorage.getItem("spendwiseToken");
+
+    if (!token) {
+      window.location.href = "/";
+    }
+  }, []);
+
   // Restore saved form data when the page opens
+
   useEffect(() => {
     const savedForm = localStorage.getItem("spendwiseDraft");
 
     if (savedForm) {
       try {
+        const savedValues = JSON.parse(savedForm);
+
         setFormValues((current) => ({
           ...current,
-          ...JSON.parse(savedForm),
+          ...savedValues,
+          type: "",
         }));
       } catch {
         localStorage.removeItem("spendwiseDraft");
@@ -46,7 +58,13 @@ export default function NewTransactionPage() {
   // Save form data whenever a field changes
   useEffect(() => {
     if (isRestored) {
-      localStorage.setItem("spendwiseDraft", JSON.stringify(formValues));
+      localStorage.setItem(
+        "spendwiseDraft",
+        JSON.stringify({
+          ...formValues,
+          type: "",
+        }),
+      );
     }
   }, [formValues, isRestored]);
 
@@ -57,6 +75,12 @@ export default function NewTransactionPage() {
     const formData = new FormData(form);
 
     setError("");
+    const token = localStorage.getItem("spendwiseToken");
+
+    if (!token) {
+      window.location.href = "/";
+      return;
+    }
     setLoading(true);
 
     const transaction = {
@@ -74,8 +98,8 @@ export default function NewTransactionPage() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-          credentials: "include",
           body: JSON.stringify(transaction),
         },
       );
@@ -91,13 +115,13 @@ export default function NewTransactionPage() {
       setFormValues({
         title: "",
         amount: "",
-        type: "expense",
+        type: "",
         category: "",
         transactionDate: getTodayDate(),
       });
 
       localStorage.removeItem("spendwiseDraft");
-      window.location.href = "/transactions";
+      setError("");
     } catch (err) {
       setError(err.message || "Unable to connect to the server.");
     } finally {
@@ -146,23 +170,32 @@ export default function NewTransactionPage() {
                 <input
                   id="amount"
                   name="amount"
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
                   placeholder="Enter amount"
-                  min="0.01"
-                  step="0.01"
                   value={formValues.amount}
-                  onChange={(event) =>
-                    setFormValues((current) => ({
-                      ...current,
-                      amount: event.target.value,
-                    }))
-                  }
+                  onKeyDown={(event) => {
+                    if (["e", "E", "+", "-"].includes(event.key)) {
+                      event.preventDefault();
+                    }
+                  }}
+                  onChange={(event) => {
+                    const value = event.target.value;
+
+                    if (/^\d*\.?\d{0,2}$/.test(value)) {
+                      setFormValues((current) => ({
+                        ...current,
+                        amount: value,
+                      }));
+                    }
+                  }}
                   required
                 />
               </div>
 
               <div className="transaction-form-field">
                 <label htmlFor="type">Transaction Type *</label>
+
                 <select
                   id="type"
                   name="type"
@@ -175,8 +208,11 @@ export default function NewTransactionPage() {
                   }
                   required
                 >
-                  <option value="expense">Expense</option>
+                  <option value="" disabled>
+                    Select type
+                  </option>
                   <option value="income">Income</option>
+                  <option value="expense">Expense</option>
                 </select>
               </div>
             </div>

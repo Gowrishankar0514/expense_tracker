@@ -13,12 +13,22 @@ export default function Sidebar({ activePage }) {
 
     setError("");
 
+    const token = localStorage.getItem("spendwiseToken");
+
+    if (!token) {
+      localStorage.removeItem("spendwiseToken");
+      window.location.href = "/";
+      return;
+    }
+
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`,
         {
           method: "POST",
-          credentials: "include",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
       );
 
@@ -27,9 +37,10 @@ export default function Sidebar({ activePage }) {
         return;
       }
 
+      localStorage.removeItem("spendwiseToken");
       window.location.href = "/";
     } catch {
-      setError("Cannot connect to the server.");
+      setError("Cannot connect to the server. Please try again.");
     }
   }
 

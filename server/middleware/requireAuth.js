@@ -1,49 +1,37 @@
-const pool = require("../config/db");
+const { verifyToken } = require("../utils/jwt");
 
-async function requireAuth(req, res, next) {
+function requireAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({
+      error: {
+        code: "UNAUTHENTICATED",
+        message: "Please log in to continue.",
+        details: [],
+      },
+    });
+  }
+
+  const token = authHeader.split(" ")[1];
+
   try {
-    const userId = req.session?.userId;
+    const decoded = verifyToken(token);
 
-    if (!userId) {
-      return res.status(401).json({
-        error: {
-          code: "UNAUTHENTICATED",
-          message: "Please log in to continue.",
-          details: [],
-        },
-      });
-    }
+    req.user = {
+      id: decoded.id,
+      email: decoded.email,
+    };
 
-    const result = await pool.query(
-      `SELECT id, name, email
-       FROM users
-       WHERE id = $1`,
-      [userId],
-    );
-
-    if (result.rowCount === 0) {
-      return req.session.destroy(() => {
-        res.clearCookie("spendwise.sid", {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
-          path: "/",
-        });
-
-        return res.status(401).json({
-          error: {
-            code: "UNAUTHENTICATED",
-            message: "Please log in to continue.",
-            details: [],
-          },
-        });
-      });
-    }
-
-    req.user = result.rows[0];
     next();
   } catch (error) {
-    next(error);
+    return res.status(401).json({
+      error: {
+        code: "UNAUTHENTICATED",
+        message: "Invalid or expired token. Please log in again.",
+        details: [],
+      },
+    });
   }
 }
 
