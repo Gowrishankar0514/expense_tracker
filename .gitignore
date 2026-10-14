@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Next.js generated files
+client/.next/
+client/out/
+
+# Build files
+dist/
+build/
+coverage/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+!.env.local.example
+
+# Log files
+*.log
+npm-debug.log*
+
+# Operating system files
+.DS_Store
+Thumbs.db
