@@ -1,10 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { Mail, LockKeyhole, Eye, EyeOff } from "lucide-react";
 
 export default function Home() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleLogin(event) {
     event.preventDefault();
@@ -70,17 +73,36 @@ export default function Home() {
         <p className="subtitle">Sign in to your SpendWise account</p>
 
         <form onSubmit={handleLogin}>
-          <input type="email" name="email" placeholder="✉   Email*" required />
+          <div className="input-with-icon">
+            <Mail size={18} className="field-icon" aria-hidden="true" />
+            <input
+              type="email"
+              name="email"
+              placeholder="Email*"
+              maxLength={75}
+              required
+            />
+          </div>
 
-          <input
-            type="password"
-            name="password"
-            placeholder="▣   Password*"
-            required
-          />
+          <div className="password-field">
+            <LockKeyhole size={18} className="field-icon" aria-hidden="true" />
 
-          <div className="forgot-password">
-            <a href="/forgot-password">Forgot Password?</a>
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              placeholder="Password*"
+              maxLength={72}
+              required
+            />
+
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
           </div>
 
           {error && <p className="login-error">{error}</p>}

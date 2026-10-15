@@ -745,15 +745,6 @@ button:disabled {
   cursor: not-allowed;
 }
 
-.transaction-notes {
-  display: block;
-  max-width: 180px;
-  margin-top: 4px;
-  overflow: hidden;
-  color: #728096;
-  text-overflow: ellipsis;
-}
-
 .transaction-status {
   padding: 18px 0;
   color: #728096;
@@ -1131,4 +1122,111 @@ button:disabled {
   .income-usage-card {
     padding: 20px 16px;
   }
+}
+.input-with-icon,
+.password-field {
+  position: relative;
+  width: 100%;
+}
+
+.input-with-icon input,
+.password-field input {
+  width: 100%;
+  box-sizing: border-box;
+  padding-left: 40px;
+}
+
+.field-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #102b4e;
+  pointer-events: none;
+}
+
+.password-field input {
+  padding-right: 45px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: #102b4e;
+  cursor: pointer;
+  padding: 5px;
+  box-shadow: none;
+}
+
+.password-toggle:hover,
+.password-toggle:focus,
+.password-toggle:active {
+  background: transparent;
+  box-shadow: none;
+}
+
+.password-toggle:hover {
+  color: #ff6b00;
+}
+.login-card .password-field .password-toggle,
+.login-card .password-field .password-toggle:hover,
+.login-card .password-field .password-toggle:focus,
+.login-card .password-field .password-toggle:active {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: none;
+  color: #102b4e;
+}
+
+.login-card .password-field .password-toggle:hover {
+  color: #102b4e;
+  background: transparent !important;
+}
+.signup-input-field {
+  position: relative;
+  width: 100%;
+}
+
+.signup-input-field input {
+  width: 100%;
+  box-sizing: border-box;
+  padding-left: 40px;
+}
+
+.signup-input-field .field-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #102b4e;
+  pointer-events: none;
+}
+
+.signup-input-field input[type="password"],
+.signup-input-field input[name="password"],
+.signup-input-field input[name="confirmPassword"] {
+  padding-right: 45px;
+}
+
+#signup-page .signup-input-field .password-toggle,
+#signup-page .signup-input-field .password-toggle:hover,
+#signup-page .signup-input-field .password-toggle:focus,
+#signup-page .signup-input-field .password-toggle:active {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: none;
+  color: #102b4e;
+}
+
+#signup-page .signup-input-field .password-toggle:hover {
+  color: #102b4e;
 }

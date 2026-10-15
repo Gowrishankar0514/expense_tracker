@@ -1,6 +1,5 @@
 function validateTransaction(req, res, next) {
-  const { title, amount, type, category, transactionDate, notes } =
-    req.body || {};
+  const { title, amount, type, category, transactionDate } = req.body || {};
 
   const errors = [];
 
@@ -21,23 +20,35 @@ function validateTransaction(req, res, next) {
   if (
     !Number.isFinite(numericAmount) ||
     numericAmount <= 0 ||
-    numericAmount > 9999999999.99
+    numericAmount > 9999999999.99 ||
+    numericAmount * 100 !== Math.round(numericAmount * 100)
   ) {
-    errors.push({ field: "amount", message: "Enter a valid positive amount." });
+    errors.push({
+      field: "amount",
+      message: "Enter a valid positive amount with up to 2 decimal places.",
+    });
   }
 
   if (!["income", "expense"].includes(type)) {
     errors.push({ field: "type", message: "Type must be income or expense." });
   }
 
+  const allowedCategories = [
+    "Food",
+    "Transport",
+    "Shopping",
+    "Bills",
+    "Healthcare",
+    "Others",
+  ];
+
   if (
     typeof category !== "string" ||
-    !category.trim() ||
-    category.trim().length > 100
+    !allowedCategories.includes(category.trim())
   ) {
     errors.push({
       field: "category",
-      message: "Category is required and must be at most 100 characters.",
+      message: "Please select a valid category.",
     });
   }
 
@@ -60,17 +71,6 @@ function validateTransaction(req, res, next) {
     });
   }
 
-  if (
-    notes !== undefined &&
-    notes !== null &&
-    (typeof notes !== "string" || notes.length > 5000)
-  ) {
-    errors.push({
-      field: "notes",
-      message: "Notes must be text with at most 5000 characters.",
-    });
-  }
-
   if (errors.length > 0) {
     return res.status(400).json({
       error: {
@@ -87,7 +87,6 @@ function validateTransaction(req, res, next) {
     type,
     category: category.trim(),
     transactionDate,
-    notes: notes?.trim() || null,
   };
 
   next();

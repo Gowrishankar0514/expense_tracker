@@ -164,7 +164,7 @@ export default function TransactionsPage() {
       }
 
       setEditingId(null);
-      setMessage("Transaction updated successfully.");
+      setMessage("");
       await refreshTransactions();
     } catch (err) {
       setError(err.message || "Could not update transaction.");
@@ -211,7 +211,7 @@ export default function TransactionsPage() {
         );
       }
 
-      setMessage("Transaction deleted successfully.");
+      setMessage("");
 
       if (transactions.length === 1 && page > 1) {
         setPage((current) => current - 1);

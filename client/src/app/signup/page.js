@@ -1,10 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { UserRound, Mail, LockKeyhole, Eye, EyeOff } from "lucide-react";
 
 export default function SignupPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   async function handleSignup(event) {
     event.preventDefault();
@@ -88,31 +91,71 @@ export default function SignupPage() {
         </p>
 
         <form onSubmit={handleSignup}>
-          <input
-            type="text"
-            name="name"
-            placeholder="♙   Full Name*"
-            required
-          />
+          <div className="signup-input-field">
+            <UserRound size={18} className="field-icon" aria-hidden="true" />
+            <input
+              type="text"
+              name="name"
+              placeholder="Full Name*"
+              maxLength={75}
+              required
+            />
+          </div>
 
-          <input type="email" name="email" placeholder="✉   Email*" required />
+          <div className="signup-input-field">
+            <Mail size={18} className="field-icon" aria-hidden="true" />
+            <input
+              type="email"
+              name="email"
+              placeholder="Email*"
+              maxLength={75}
+              required
+            />
+          </div>
 
-          <input
-            type="password"
-            name="password"
-            placeholder="▣   Password*"
-            minLength={8}
-            required
-          />
+          <div className="signup-input-field">
+            <LockKeyhole size={18} className="field-icon" aria-hidden="true" />
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              placeholder="Password*"
+              minLength={8}
+              maxLength={72}
+              required
+            />
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
 
-          <input
-            type="password"
-            name="confirmPassword"
-            placeholder="▣   Confirm Password*"
-            minLength={8}
-            required
-          />
-
+          <div className="signup-input-field">
+            <LockKeyhole size={18} className="field-icon" aria-hidden="true" />
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              name="confirmPassword"
+              placeholder="Confirm Password*"
+              minLength={8}
+              maxLength={72}
+              required
+            />
+            <button
+              type="button"
+              className="password-toggle"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              aria-label={
+                showConfirmPassword
+                  ? "Hide confirm password"
+                  : "Show confirm password"
+              }
+            >
+              {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
           {error && <p className="login-error">{error}</p>}
 
           <button type="submit" disabled={loading}>

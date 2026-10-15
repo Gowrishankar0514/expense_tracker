@@ -3,11 +3,11 @@ const pool = require("../config/db");
 async function createTransaction(userId, data) {
   const result = await pool.query(
     `INSERT INTO transactions
-      (user_id, title, amount, type, category, transaction_date, notes)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
+      (user_id, title, amount, type, category, transaction_date)
+     VALUES ($1, $2, $3, $4, $5, $6)
      RETURNING id, title, amount, type, category,
                TO_CHAR(transaction_date, 'YYYY-MM-DD') AS "transactionDate",
-               notes, created_at AS "createdAt"`,
+                created_at AS "createdAt"`,
     [
       userId,
       data.title,
@@ -15,7 +15,6 @@ async function createTransaction(userId, data) {
       data.type,
       data.category,
       data.transactionDate,
-      data.notes,
     ],
   );
 
@@ -59,8 +58,7 @@ async function listTransactions(userId, filters) {
 
   const result = await pool.query(
     `SELECT id, title, amount, type, category,
-            TO_CHAR(transaction_date, 'YYYY-MM-DD') AS "transactionDate",
-            notes, created_at AS "createdAt"
+            TO_CHAR(transaction_date, 'YYYY-MM-DD') AS "transactionDate", created_at AS "createdAt"
      FROM transactions
      WHERE ${conditions.join(" AND ")}
      ORDER BY transaction_date DESC, id DESC
@@ -84,12 +82,11 @@ async function updateTransaction(userId, transactionId, data) {
          type = $3,
          category = $4,
          transaction_date = $5,
-         notes = $6,
+         
          updated_at = NOW()
-     WHERE id = $7 AND user_id = $8
+     WHERE id = $6 AND user_id = $7
      RETURNING id, title, amount, type, category,
-             TO_CHAR(transaction_date, 'YYYY-MM-DD') AS "transactionDate",
-               notes, created_at AS "createdAt",
+             TO_CHAR(transaction_date, 'YYYY-MM-DD') AS "transactionDate", created_at AS "createdAt",
                updated_at AS "updatedAt"`,
     [
       data.title,
@@ -97,7 +94,7 @@ async function updateTransaction(userId, transactionId, data) {
       data.type,
       data.category,
       data.transactionDate,
-      data.notes,
+
       transactionId,
       userId,
     ],
