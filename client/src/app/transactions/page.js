@@ -2,6 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
+function getTodayDate() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState([]);
@@ -18,6 +26,17 @@ export default function TransactionsPage() {
   const [editForm, setEditForm] = useState({});
   const [savingId, setSavingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [newTransactionError, setNewTransactionError] = useState("");
+
+  const [newTransaction, setNewTransaction] = useState({
+    title: "",
+    amount: "",
+    type: "",
+    category: "",
+    transactionDate: new Date().toLocaleDateString("en-CA"),
+  });
 
   const limit = 10;
 
@@ -260,6 +279,91 @@ export default function TransactionsPage() {
 
     setTransactions(data.transactions || []);
   }
+  const expenseCategories = [
+    "Food",
+    "Healthcare",
+    "Transport",
+    "Bills",
+    "Shopping",
+    "Others",
+  ];
+
+  const incomeCategories = [
+    "Salary",
+    "Freelance",
+    "Business",
+    "Investments",
+    "Other Income",
+  ];
+
+  const availableCategories =
+    newTransaction.type === "income"
+      ? incomeCategories
+      : newTransaction.type === "expense"
+        ? expenseCategories
+        : [];
+  async function handleAddTransaction(event) {
+    event.preventDefault();
+
+    const token = localStorage.getItem("spendwiseToken");
+
+    if (!token) {
+      window.location.href = "/";
+      return;
+    }
+
+    setCreating(true);
+    setNewTransactionError("");
+    setError("");
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/transactions`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            ...newTransaction,
+            amount: Number(newTransaction.amount),
+          }),
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error?.message ||
+            data.message ||
+            "Could not create transaction.",
+        );
+      }
+
+      setIsAddModalOpen(false);
+      setNewTransaction({
+        title: "",
+        amount: "",
+        type: "",
+        category: "",
+        transactionDate: getTodayDate(),
+      });
+
+      try {
+        await refreshTransactions();
+      } catch (err) {
+        setError(
+          err.message || "Transaction saved, but the list could not refresh.",
+        );
+      }
+    } catch (err) {
+      setNewTransactionError(err.message || "Could not create transaction.");
+    } finally {
+      setCreating(false);
+    }
+  }
 
   return (
     <div className="app-layout">
@@ -274,16 +378,35 @@ export default function TransactionsPage() {
             </p>
           </div>
 
-          <a className="add-transaction-button" href="/transactions/new">
+          <button
+            type="button"
+            className="add-transaction-button"
+            onClick={() => {
+              setNewTransaction({
+                title: "",
+                amount: "",
+                type: "",
+                category: "",
+                transactionDate: getTodayDate(),
+              });
+              setNewTransactionError("");
+              setIsAddModalOpen(true);
+            }}
+          >
             + Add Transaction
-          </a>
+          </button>
         </div>
 
         <section className="transaction-filter-panel">
           <select
             aria-label="Filter by type"
             value={type}
-            onChange={(event) => changeFilter(setType, event.target.value)}
+            onChange={(event) => {
+              setType(event.target.value);
+              setCategory("");
+              setPage(1);
+              setMessage("");
+            }}
           >
             <option value="">All Types</option>
             <option value="income">Income</option>
@@ -296,12 +419,16 @@ export default function TransactionsPage() {
             onChange={(event) => changeFilter(setCategory, event.target.value)}
           >
             <option value="">All Categories</option>
-            <option value="Food">Food</option>
-            <option value="Transport">Transport</option>
-            <option value="Shopping">Shopping</option>
-            <option value="Bills">Bills</option>
-            <option value="Healthcare">Healthcare</option>
-            <option value="Others">Others</option>
+            {(type === "income"
+              ? incomeCategories
+              : type === "expense"
+                ? expenseCategories
+                : [...incomeCategories, ...expenseCategories]
+            ).map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
           </select>
 
           <label className="date-filter">
@@ -373,6 +500,7 @@ export default function TransactionsPage() {
                               aria-label="Edit transaction date"
                               type="date"
                               value={editForm.transactionDate}
+                              max={getTodayDate()}
                               onChange={(event) =>
                                 updateEditField(
                                   "transactionDate",
@@ -394,9 +522,12 @@ export default function TransactionsPage() {
                             <select
                               aria-label="Edit type"
                               value={editForm.type}
-                              onChange={(event) =>
-                                updateEditField("type", event.target.value)
-                              }
+                              onChange={(event) => {
+                                const selectedType = event.target.value;
+
+                                updateEditField("type", selectedType);
+                                updateEditField("category", "");
+                              }}
                             >
                               <option value="income">Income</option>
                               <option value="expense">Expense</option>
@@ -415,12 +546,15 @@ export default function TransactionsPage() {
                               <option value="" disabled>
                                 Select category
                               </option>
-                              <option value="Food">Food</option>
-                              <option value="Transport">Transport</option>
-                              <option value="Shopping">Shopping</option>
-                              <option value="Bills">Bills</option>
-                              <option value="Healthcare">Healthcare</option>
-                              <option value="Others">Others</option>
+
+                              {(editForm.type === "income"
+                                ? incomeCategories
+                                : expenseCategories
+                              ).map((item) => (
+                                <option key={item} value={item}>
+                                  {item}
+                                </option>
+                              ))}
                             </select>
                           </td>
                           <td>
@@ -540,6 +674,154 @@ export default function TransactionsPage() {
             </div>
           </div>
         </section>
+        {isAddModalOpen && (
+          <div
+            className="transaction-modal-overlay"
+            onClick={() => setIsAddModalOpen(false)}
+          >
+            <div
+              className="transaction-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="add-transaction-title"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="transaction-modal-header">
+                <h2 id="add-transaction-title">Add Transaction</h2>
+
+                <button
+                  type="button"
+                  className="transaction-modal-close"
+                  aria-label="Close popup"
+                  onClick={() => setIsAddModalOpen(false)}
+                >
+                  ×
+                </button>
+              </div>
+
+              <form onSubmit={handleAddTransaction}>
+                <label>
+                  Title
+                  <input
+                    type="text"
+                    maxLength={75}
+                    required
+                    value={newTransaction.title}
+                    onChange={(event) =>
+                      setNewTransaction((current) => ({
+                        ...current,
+                        title: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+
+                <label>
+                  Amount
+                  <input
+                    type="number"
+                    min="0.01"
+                    max="9999999999.99"
+                    step="0.01"
+                    required
+                    value={newTransaction.amount}
+                    onKeyDown={(event) => {
+                      if (["e", "E", "+", "-"].includes(event.key)) {
+                        event.preventDefault();
+                      }
+                    }}
+                    onChange={(event) =>
+                      setNewTransaction((current) => ({
+                        ...current,
+                        amount: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+
+                <label>
+                  Type
+                  <select
+                    required
+                    value={newTransaction.type}
+                    onChange={(event) =>
+                      setNewTransaction((current) => ({
+                        ...current,
+                        type: event.target.value,
+                        category: "",
+                      }))
+                    }
+                  >
+                    <option value="">Select type</option>
+                    <option value="income">Income</option>
+                    <option value="expense">Expense</option>
+                  </select>
+                </label>
+
+                <label>
+                  Category
+                  <select
+                    required
+                    value={newTransaction.category}
+                    onChange={(event) =>
+                      setNewTransaction((current) => ({
+                        ...current,
+                        category: event.target.value,
+                      }))
+                    }
+                    disabled={!newTransaction.type}
+                  >
+                    <option value="">Select category</option>
+
+                    {availableCategories.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label>
+                  Transaction Date
+                  <input
+                    type="date"
+                    required
+                    value={newTransaction.transactionDate}
+                    max={getTodayDate()}
+                    onChange={(event) =>
+                      setNewTransaction((current) => ({
+                        ...current,
+                        transactionDate: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+
+                {newTransactionError && (
+                  <p className="login-error">{newTransactionError}</p>
+                )}
+
+                <div className="transaction-modal-actions">
+                  <button
+                    type="button"
+                    className="action-button"
+                    onClick={() => setIsAddModalOpen(false)}
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="submit"
+                    className="add-transaction-button"
+                    disabled={creating}
+                  >
+                    {creating ? "Saving..." : "Save Transaction"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

@@ -1,5 +1,5 @@
 const express = require("express");
-const healthRoutes = require("./routes/healthRoutes");
+
 const notFound = require("./middleware/notFound");
 const errorHandler = require("./middleware/errorHandler");
 const authRoutes = require("./routes/authRoutes");
@@ -24,7 +24,6 @@ app.use(
 
 app.use(express.json());
 
-app.use("/api/health", healthRoutes);
 app.use("/api/auth", validateOrigin, authRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/dashboard", dashboardRoutes);

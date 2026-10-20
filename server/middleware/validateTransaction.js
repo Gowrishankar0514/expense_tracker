@@ -33,7 +33,7 @@ function validateTransaction(req, res, next) {
     errors.push({ field: "type", message: "Type must be income or expense." });
   }
 
-  const allowedCategories = [
+  const expenseCategories = [
     "Food",
     "Transport",
     "Shopping",
@@ -42,17 +42,30 @@ function validateTransaction(req, res, next) {
     "Others",
   ];
 
+  const incomeCategories = [
+    "Salary",
+    "Freelance",
+    "Business",
+    "Investments",
+    "Other Income",
+  ];
+
+  const allowedCategories =
+    type === "income" ? incomeCategories : expenseCategories;
+
   if (
     typeof category !== "string" ||
     !allowedCategories.includes(category.trim())
   ) {
     errors.push({
       field: "category",
-      message: "Please select a valid category.",
+      message:
+        type === "income"
+          ? "Please select a valid income category."
+          : "Please select a valid expense category.",
     });
   }
 
-  // Require a real calendar date in YYYY-MM-DD format.
   const validDate =
     typeof transactionDate === "string" &&
     /^\d{4}-\d{2}-\d{2}$/.test(transactionDate) &&

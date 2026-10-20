@@ -30,6 +30,40 @@ async function list(req, res, next) {
       });
     }
 
+    const expenseCategories = [
+      "Food",
+      "Transport",
+      "Shopping",
+      "Bills",
+      "Healthcare",
+      "Others",
+    ];
+
+    const incomeCategories = [
+      "Salary",
+      "Freelance",
+      "Business",
+      "Investments",
+      "Other Income",
+    ];
+
+    const allowedCategories =
+      type === "income"
+        ? incomeCategories
+        : type === "expense"
+          ? expenseCategories
+          : [...incomeCategories, ...expenseCategories];
+
+    if (category && !allowedCategories.includes(category)) {
+      return res.status(400).json({
+        error: {
+          code: "INVALID_FILTER",
+          message: "Category is not valid for the selected transaction type.",
+          details: [],
+        },
+      });
+    }
+
     if (
       (from && !isValidDate(from)) ||
       (to && !isValidDate(to)) ||
@@ -101,7 +135,10 @@ async function update(req, res, next) {
       });
     }
 
-    return res.status(200).json({ success: true, transaction });
+    return res.status(200).json({
+      success: true,
+      transaction,
+    });
   } catch (error) {
     next(error);
   }
@@ -136,6 +173,7 @@ function isValidDate(value) {
   }
 
   const date = new Date(`${value}T00:00:00Z`);
+
   return (
     !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value
   );

@@ -18,7 +18,6 @@ async function registerUser({ name, email, password }) {
     throw error;
   }
 
-  // Never store the plain-text password.
   const passwordHash = await bcrypt.hash(password, 12);
 
   try {
@@ -75,7 +74,6 @@ async function loginUser({ email, password }) {
     throw error;
   }
 
-  // Never return the password hash.
   return {
     id: user.id,
     name: user.name,

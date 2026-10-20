@@ -4,13 +4,23 @@ import { useState } from "react";
 import { UserRound, Mail, LockKeyhole, Eye, EyeOff } from "lucide-react";
 
 export default function SignupPage() {
+  const [nameError, setNameError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [error, setError] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   async function handleSignup(event) {
     event.preventDefault();
+
+    setNameError("");
+    setEmailError("");
+    setPasswordError("");
+    setConfirmPasswordError("");
     setError("");
 
     const formData = new FormData(event.currentTarget);
@@ -20,28 +30,57 @@ export default function SignupPage() {
     const password = formData.get("password");
     const confirmPassword = formData.get("confirmPassword");
 
-    if (typeof password !== "string" || password.length < 8) {
-      setError("Password must contain at least 8 characters.");
-      return;
+    let hasError = false;
+
+    // Validate name.
+    if (typeof name !== "string" || !name.trim()) {
+      setNameError("Full name is required.");
+      hasError = true;
+    } else if (name.trim().length > 75) {
+      setNameError("Name must not exceed 75 characters.");
+      hasError = true;
     }
 
-    if (!/[A-Z]/.test(password)) {
-      setError("Password must contain at least one uppercase letter.");
-      return;
+    // Validate email.
+    if (typeof email !== "string" || !email.trim()) {
+      setEmailError("Email is required.");
+      hasError = true;
+    } else if (email.trim().length > 75) {
+      setEmailError("Email must not exceed 75 characters.");
+      hasError = true;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setEmailError("Please enter a valid email address.");
+      hasError = true;
     }
 
-    if (!/[^A-Za-z0-9\s]/.test(password)) {
-      setError("Password must contain at least one special character.");
-      return;
+    // Validate password.
+    if (typeof password !== "string" || !password) {
+      setPasswordError("Password is required.");
+      hasError = true;
+    } else if (password.length < 8) {
+      setPasswordError("Password must contain at least 8 characters.");
+      hasError = true;
+    } else if (password.length > 72) {
+      setPasswordError("Password must not exceed 72 characters.");
+      hasError = true;
+    } else if (!/[A-Z]/.test(password)) {
+      setPasswordError("Password must contain at least one uppercase letter.");
+      hasError = true;
+    } else if (!/[^A-Za-z0-9\s]/.test(password)) {
+      setPasswordError("Password must contain at least one special character.");
+      hasError = true;
     }
 
-    if (password.length > 72) {
-      setError("Password must not exceed 72 characters.");
-      return;
+    // Validate confirm password.
+    if (typeof confirmPassword !== "string" || !confirmPassword) {
+      setConfirmPasswordError("Please confirm your password.");
+      hasError = true;
+    } else if (password !== confirmPassword) {
+      setConfirmPasswordError("Passwords do not match.");
+      hasError = true;
     }
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+    if (hasError) {
       return;
     }
 
@@ -56,21 +95,53 @@ export default function SignupPage() {
             "Content-Type": "application/json",
           },
           credentials: "include",
-          body: JSON.stringify({ name, email, password }),
+          body: JSON.stringify({
+            name: name.trim(),
+            email: email.trim(),
+            password,
+          }),
         },
       );
 
       const data = await response.json();
 
       if (!response.ok) {
-        setError(
-          data.message || data.msg || "Registration failed. Please try again.",
-        );
+        const details = data.error?.details;
+
+        // Display backend validation errors beside their fields.
+        if (Array.isArray(details) && details.length > 0) {
+          for (const detail of details) {
+            if (detail.field === "name") {
+              setNameError(detail.message);
+            } else if (detail.field === "email") {
+              setEmailError(detail.message);
+            } else if (detail.field === "password") {
+              setPasswordError(detail.message);
+            }
+          }
+        } else if (
+          data.error?.code === "EMAIL_ALREADY_EXISTS" ||
+          data.code === "EMAIL_ALREADY_EXISTS"
+        ) {
+          setEmailError(
+            data.error?.message ||
+              data.message ||
+              "An account with this email already exists.",
+          );
+        } else {
+          setError(
+            data.error?.message ||
+              data.message ||
+              data.msg ||
+              "Registration failed. Please try again.",
+          );
+        }
+
         return;
       }
 
       window.location.href = "/";
-    } catch (err) {
+    } catch {
       setError("Cannot connect to the server. Please try again.");
     } finally {
       setLoading(false);
@@ -90,7 +161,7 @@ export default function SignupPage() {
           Join SpendWise and take control of your money
         </p>
 
-        <form onSubmit={handleSignup}>
+        <form onSubmit={handleSignup} noValidate>
           <div className="signup-input-field">
             <UserRound size={18} className="field-icon" aria-hidden="true" />
             <input
@@ -99,8 +170,20 @@ export default function SignupPage() {
               placeholder="Full Name*"
               maxLength={75}
               required
+              aria-invalid={!!nameError}
+              aria-describedby={nameError ? "name-error" : undefined}
+              onChange={() => {
+                setNameError("");
+                setError("");
+              }}
             />
           </div>
+
+          {nameError && (
+            <p id="name-error" className="login-error" role="alert">
+              {nameError}
+            </p>
+          )}
 
           <div className="signup-input-field">
             <Mail size={18} className="field-icon" aria-hidden="true" />
@@ -110,8 +193,20 @@ export default function SignupPage() {
               placeholder="Email*"
               maxLength={75}
               required
+              aria-invalid={!!emailError}
+              aria-describedby={emailError ? "signup-email-error" : undefined}
+              onChange={() => {
+                setEmailError("");
+                setError("");
+              }}
             />
           </div>
+
+          {emailError && (
+            <p id="signup-email-error" className="login-error" role="alert">
+              {emailError}
+            </p>
+          )}
 
           <div className="signup-input-field">
             <LockKeyhole size={18} className="field-icon" aria-hidden="true" />
@@ -122,6 +217,14 @@ export default function SignupPage() {
               minLength={8}
               maxLength={72}
               required
+              aria-invalid={!!passwordError}
+              aria-describedby={
+                passwordError ? "signup-password-error" : undefined
+              }
+              onChange={() => {
+                setPasswordError("");
+                setError("");
+              }}
             />
             <button
               type="button"
@@ -133,6 +236,12 @@ export default function SignupPage() {
             </button>
           </div>
 
+          {passwordError && (
+            <p id="signup-password-error" className="login-error" role="alert">
+              {passwordError}
+            </p>
+          )}
+
           <div className="signup-input-field">
             <LockKeyhole size={18} className="field-icon" aria-hidden="true" />
             <input
@@ -142,6 +251,14 @@ export default function SignupPage() {
               minLength={8}
               maxLength={72}
               required
+              aria-invalid={!!confirmPasswordError}
+              aria-describedby={
+                confirmPasswordError ? "confirm-password-error" : undefined
+              }
+              onChange={() => {
+                setConfirmPasswordError("");
+                setError("");
+              }}
             />
             <button
               type="button"
@@ -156,7 +273,18 @@ export default function SignupPage() {
               {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
-          {error && <p className="login-error">{error}</p>}
+
+          {confirmPasswordError && (
+            <p id="confirm-password-error" className="login-error" role="alert">
+              {confirmPasswordError}
+            </p>
+          )}
+
+          {error && (
+            <p className="login-error" role="alert">
+              {error}
+            </p>
+          )}
 
           <button type="submit" disabled={loading}>
             {loading ? "Creating Account..." : "Sign Up"}

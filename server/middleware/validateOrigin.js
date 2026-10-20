@@ -3,7 +3,6 @@ function validateOrigin(req, res, next) {
 
   const origin = req.get("Origin");
 
-  // Allow non-browser development tools such as Thunder Client.
   if (!origin && process.env.NODE_ENV !== "production") {
     return next();
   }
