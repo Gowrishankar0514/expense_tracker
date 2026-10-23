@@ -21,7 +21,6 @@ export default function Home() {
     const email = formData.get("email");
     const password = formData.get("password");
 
-    // Validate email.
     if (typeof email !== "string" || !email.trim()) {
       setEmailError("Email is required.");
     } else if (email.trim().length > 255) {
@@ -30,7 +29,6 @@ export default function Home() {
       setEmailError("Please enter a valid email address.");
     }
 
-    // Validate password.
     if (typeof password !== "string" || !password) {
       setPasswordError("Password is required.");
     } else if (password.length < 8) {
@@ -49,11 +47,10 @@ export default function Home() {
       }
     }
 
-    // Stop if either field is invalid.
     const validEmail =
       typeof email === "string" &&
       email.trim().length > 0 &&
-      email.trim().length <= 255 &&
+      email.trim().length <= 75 &&
       /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
     const validPassword =
@@ -147,7 +144,7 @@ export default function Home() {
               type="email"
               name="email"
               placeholder="Email*"
-              maxLength={255}
+              maxLength={75}
               required
               aria-invalid={!!emailError}
               aria-describedby={emailError ? "email-error" : undefined}

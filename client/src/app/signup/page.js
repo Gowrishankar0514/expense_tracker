@@ -32,7 +32,6 @@ export default function SignupPage() {
 
     let hasError = false;
 
-    // Validate name.
     if (typeof name !== "string" || !name.trim()) {
       setNameError("Full name is required.");
       hasError = true;
@@ -41,7 +40,6 @@ export default function SignupPage() {
       hasError = true;
     }
 
-    // Validate email.
     if (typeof email !== "string" || !email.trim()) {
       setEmailError("Email is required.");
       hasError = true;
@@ -53,7 +51,6 @@ export default function SignupPage() {
       hasError = true;
     }
 
-    // Validate password.
     if (typeof password !== "string" || !password) {
       setPasswordError("Password is required.");
       hasError = true;
@@ -71,7 +68,6 @@ export default function SignupPage() {
       hasError = true;
     }
 
-    // Validate confirm password.
     if (typeof confirmPassword !== "string" || !confirmPassword) {
       setConfirmPasswordError("Please confirm your password.");
       hasError = true;
@@ -108,7 +104,6 @@ export default function SignupPage() {
       if (!response.ok) {
         const details = data.error?.details;
 
-        // Display backend validation errors beside their fields.
         if (Array.isArray(details) && details.length > 0) {
           for (const detail of details) {
             if (detail.field === "name") {

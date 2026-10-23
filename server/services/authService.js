@@ -5,7 +5,6 @@ async function registerUser({ name, email, password }) {
   const normalizedName = name.trim();
   const normalizedEmail = email.trim().toLowerCase();
 
-  // Check for an existing account.
   const existingUser = await pool.query(
     "SELECT id FROM users WHERE email = $1",
     [normalizedEmail],

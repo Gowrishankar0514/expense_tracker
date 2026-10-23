@@ -14,6 +14,7 @@ function getTodayDate() {
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState([]);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [type, setType] = useState("");
   const [category, setCategory] = useState("");
   const [from, setFrom] = useState("");
@@ -41,6 +42,16 @@ export default function TransactionsPage() {
   const limit = 10;
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [search]);
+
+  useEffect(() => {
     async function loadTransactions() {
       const token = localStorage.getItem("spendwiseToken");
 
@@ -58,7 +69,9 @@ export default function TransactionsPage() {
           limit: String(limit),
         });
 
-        if (search.trim()) params.set("search", search.trim());
+        if (debouncedSearch.trim()) {
+          params.set("search", debouncedSearch.trim());
+        }
         if (type) params.set("type", type);
         if (category.trim()) params.set("category", category.trim());
         if (from) params.set("from", from);
@@ -92,7 +105,7 @@ export default function TransactionsPage() {
     }
 
     loadTransactions();
-  }, [page, search, type, category, from, to]);
+  }, [page, debouncedSearch, type, category, from, to]);
 
   const formatMoney = (amount) =>
     new Intl.NumberFormat("en-IN", {
@@ -256,7 +269,9 @@ export default function TransactionsPage() {
       limit: String(limit),
     });
 
-    if (search.trim()) params.set("search", search.trim());
+    if (debouncedSearch.trim()) {
+      params.set("search", debouncedSearch.trim());
+    }
     if (type) params.set("type", type);
     if (category.trim()) params.set("category", category.trim());
     if (from) params.set("from", from);
