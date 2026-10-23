@@ -607,11 +607,6 @@ export default function TransactionsPage() {
                           <td>{formatDate(transaction.transactionDate)}</td>
                           <td>
                             <div>{transaction.title}</div>
-                            {transaction.notes && (
-                              <small className="transaction-notes">
-                                {transaction.notes}
-                              </small>
-                            )}
                           </td>
                           <td>
                             <span

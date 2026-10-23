@@ -90,7 +90,6 @@ export default function SignupPage() {
           headers: {
             "Content-Type": "application/json",
           },
-          credentials: "include",
           body: JSON.stringify({
             name: name.trim(),
             email: email.trim(),

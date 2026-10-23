@@ -74,7 +74,6 @@ export default function Home() {
           headers: {
             "Content-Type": "application/json",
           },
-          credentials: "include",
           body: JSON.stringify({
             email: email.trim(),
             password,
